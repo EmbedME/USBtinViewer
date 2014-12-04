@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="compile">
+
+    <property name="src" location="src"/>
+    <property name="build" location="build"/>
+    <property name="dist.dir"  location="dist"/>
+    <property name="doc.dir"  location="doc"/>
+
+    <path id="project.class.path">
+        <pathelement path="${classpath}"/>
+        <pathelement path="${build}"/>
+        <pathelement location="lib/jssc-2.8.0.jar"/>
+        <pathelement location="lib/USBtinLib-1.0.0.jar"/>
+    </path>
+
+    <target name="clean">
+        <delete dir="${build}"/>
+        <delete dir="${dist.dir}"/>
+        <delete dir="${doc.dir}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${build}"/>
+        <javac srcdir="${src}" destdir="${build}" includeantruntime="false">
+            <classpath refid="project.class.path"/>
+        </javac>
+        <copy todir="build/res">
+           <fileset dir="res"/>
+        </copy>
+    </target>
+
+    <target name="run" depends="compile">
+        <java classname="USBtinViewer" fork="true">
+            <classpath refid="project.class.path"/>
+        </java>
+    </target>
+
+    <target name="doc">
+        <delete dir="${doc.dir}"/>
+        <mkdir dir="${doc.dir}"/>
+        <javadoc sourcepath="${src}" destdir="${doc.dir}" packagenames="" >
+            <classpath refid="project.class.path"/>
+        </javadoc>
+    </target>
+
+    <target name="jar" depends="compile">
+        <mkdir dir="${dist.dir}"/>
+        <jar destfile="${dist.dir}/USBtinViewer.jar" basedir="${build}">
+            <manifest>
+                <attribute name="Main-Class" value="USBtinViewer"/>
+            </manifest>
+            <zipfileset src="lib/jssc-2.8.0.jar"/>
+            <zipfileset src="lib/USBtinLib-1.0.0.jar"/>
+        </jar>
+    </target>
+
+</project>
