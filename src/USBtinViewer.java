@@ -41,7 +41,7 @@ import jssc.SerialPortList;
 public class USBtinViewer extends javax.swing.JFrame implements CANMessageListener {
 
     /** Version string */
-    protected final String version = "1.0";
+    protected final String version = "1.1";
 
     /** USBtin device */
     protected USBtin usbtin = new USBtin();

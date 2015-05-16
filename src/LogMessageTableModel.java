@@ -47,10 +47,10 @@ public class LogMessageTableModel implements TableModel {
     protected ImageIcon[] icons;
     
     /** List containing active listeners */
-    private final ArrayList<TableModelListener> listeners = new ArrayList<>();
+    private final ArrayList<TableModelListener> listeners = new ArrayList<TableModelListener>();
     
     /** List of log messages to view */
-    private final ArrayList<LogMessage> messages = new ArrayList<>();
+    private final ArrayList<LogMessage> messages = new ArrayList<LogMessage>();
 
     /**
      * Standard constructor

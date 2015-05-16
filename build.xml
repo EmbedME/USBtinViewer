@@ -6,6 +6,10 @@
     <property name="dist.dir"  location="dist"/>
     <property name="doc.dir"  location="doc"/>
 
+    <property name="ant.build.javac.source" value="1.6"/>
+    <property name="ant.build.javac.target" value="1.6"/>
+
+
     <path id="project.class.path">
         <pathelement path="${classpath}"/>
         <pathelement path="${build}"/>
@@ -21,7 +25,7 @@
 
     <target name="compile">
         <mkdir dir="${build}"/>
-        <javac srcdir="${src}" destdir="${build}" includeantruntime="false">
+        <javac srcdir="${src}" destdir="${build}" includeantruntime="false" bootclasspath="/opt/jre1.6.0_45/lib/rt.jar">
             <classpath refid="project.class.path"/>
         </javac>
         <copy todir="build/res">
