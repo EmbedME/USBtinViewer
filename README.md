@@ -30,6 +30,21 @@ ant jar
 java -jar dist/USBtinViewer.jar
 ```
 
+
+Changelog
+---------
+
+1.2 (2015-10-06)
+* Updated USBtinLib to version 1.1.0
+* Added monitor view
+
+1.1 (2015-05-16)
+* Minor changes for compatibility with java 1.6
+
+1.0 (2014-12-04)
+First release
+
+
 License
 -------
 

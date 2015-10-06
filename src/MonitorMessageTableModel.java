@@ -2,12 +2,7 @@
  * Part of USBtinViewer - Simple GUI for USBtin - USB to CAN interface
  * http://www.fischl.de/usbtin
  *
- * Notes:
- * - The timestamp is generated in the application on the host, the hardware
- *   timestamping is currently not used!
- * - Disable "Follow" on high-loaded busses!
- *
- * Copyright (C) 2014  Thomas Fischl 
+ * Copyright (C) 2015  Thomas Fischl 
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +20,7 @@
 
 import de.fischl.usbtin.*;
 import java.util.ArrayList;
+import java.util.TreeMap;
 import javax.swing.ImageIcon;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -35,13 +31,13 @@ import javax.swing.table.TableModel;
  * 
  * @author Thomas Fischl
  */
-public class LogMessageTableModel implements TableModel {
+public class MonitorMessageTableModel implements TableModel {
 
     /** Column titles */
-    protected final String[] titles = new String[]{"Time (ms)", "Type", "Id", "DLC", "Data"};
+    protected final String[] titles = new String[]{"Period", "Count", "Type", "Id", "DLC", "Data"};
     
     /** Column classes */
-    protected final Class[] classes = new Class[]{String.class, ImageIcon.class, String.class, String.class, String.class};
+    protected final Class[] classes = new Class[]{String.class, String.class, ImageIcon.class, String.class, String.class, String.class};
     
     /** Type icons */
     protected ImageIcon[] icons;
@@ -50,12 +46,12 @@ public class LogMessageTableModel implements TableModel {
     private final ArrayList<TableModelListener> listeners = new ArrayList<TableModelListener>();
     
     /** List of log messages to view */
-    private final ArrayList<LogMessage> messages = new ArrayList<LogMessage>();
+    private final TreeMap<Integer, MonitorMessage> messages = new TreeMap<Integer, MonitorMessage>();
 
     /**
      * Standard constructor
      */
-    public LogMessageTableModel() {
+    public MonitorMessageTableModel() {
         icons = new ImageIcon[]{
             new ImageIcon(getClass().getResource("/res/icons/info.png")),
             new ImageIcon(getClass().getResource("/res/icons/error.png")),
@@ -65,26 +61,52 @@ public class LogMessageTableModel implements TableModel {
     }
 
     /**
-     * Add given message to message list
+     * Add given message to message map
      * 
-     * @param msg Message list to add
+     * @param logmessage Message to add
      */
-    public void addMessage(LogMessage msg) {
-        int index = messages.size();
-        messages.add(msg);
-
-        TableModelEvent e = new TableModelEvent(this, index, index, TableModelEvent.ALL_COLUMNS, TableModelEvent.INSERT);
+    public void add(LogMessage logmessage) {
+        
+        TableModelEvent tableEvent;
+        
+        // prepare key for this message
+        int key = logmessage.getCanmsg().getId() << 2;                        
+        if (logmessage.getCanmsg().isExtended()) {
+            key |= 1;
+        }
+        if (logmessage.getType() == LogMessage.MessageType.OUT) {
+            key |= 2;
+        }
+                
+        // check if message already in tree, add/update it and generate event
+        if (messages.containsKey(key)) {
+            MonitorMessage message = (MonitorMessage) messages.get(key);            
+            message.increaseCount();
+            message.setPeriod(logmessage.getTimestamp() - message.getLastLogMessage().getTimestamp());
+            message.setLastLogMessage(logmessage);
+            
+            int index = messages.headMap(key).size();
+            tableEvent = new TableModelEvent(this, index, index, TableModelEvent.ALL_COLUMNS, TableModelEvent.UPDATE);
+            
+        } else {
+            messages.put(key, new MonitorMessage(logmessage));
+            
+            int index = messages.headMap(key).size();
+            tableEvent = new TableModelEvent(this, index, index, TableModelEvent.ALL_COLUMNS, TableModelEvent.INSERT);            
+        }
+                
+        // report event to listeners
         for (int i = 0, n = listeners.size(); i < n; i++) {
-            listeners.get(i).tableChanged(e);
+            listeners.get(i).tableChanged(tableEvent);
         }
     }
-
+    
     /**
      * Clear the message list
      */
     public void clear() {
         
-        if (messages.size() == 0) return;
+        if (messages.size() == 0) return;        
         int lastRow = messages.size() - 1;
 
         messages.clear();
@@ -94,7 +116,7 @@ public class LogMessageTableModel implements TableModel {
             listeners.get(i).tableChanged(e);
         }
     }
-
+    
     /**
      * Get count of rows
      * 
@@ -159,52 +181,49 @@ public class LogMessageTableModel implements TableModel {
     @Override
     public Object getValueAt(int row, int col) {
 
-        CANMessage canmsg = messages.get(row).getCanmsg();
-        if (canmsg == null) {
-            switch (col) {
-                case 1:
-                    return icons[messages.get(row).getType().ordinal()];
-                case 4:
-                    return messages.get(row).getMessage();
-            }
-            return "";
-        } else {
-            switch (col) {
-                case 0:
-                    return messages.get(row).getTimestamp();
-                case 1:
-                    return icons[messages.get(row).getType().ordinal()];
+        MonitorMessage message = (MonitorMessage) messages.values().toArray()[row];
+        
+        LogMessage logmessage = message.getLastLogMessage();
+        
+        CANMessage canmsg = logmessage.getCanmsg();
+        switch (col) {
+            case 0:                
+                return message.getPeriod();
+            case 1:
+                return message.getCount();
+            case 2:
+                return icons[logmessage.getType().ordinal()];
 
-                case 2:
-                    if (canmsg.isExtended()) {
-                        return String.format("%08xh", canmsg.getId());
-                    } else {
-                        return String.format("%03xh", canmsg.getId());
+            case 3:
+                if (canmsg.isExtended()) {
+                    return String.format("%08xh", canmsg.getId());
+                } else {
+                    return String.format("%03xh", canmsg.getId());
+                }
+
+            case 4:
+                return canmsg.getData().length;
+
+            case 5:
+
+                if (canmsg.isRtr()) {
+                    return "Remote Transmission Request";
+                }
+
+                String s = "";
+                byte[] data = canmsg.getData();
+                for (int i = 0; i < data.length; i++) {
+                    if (i > 0) {
+                        s = s.concat(" ");
                     }
+                    s = s.concat(String.format("%02x", data[i]));
+                }
 
-                case 3:
-                    return canmsg.getData().length;
+                return s;
 
-                case 4:
-
-                    if (canmsg.isRtr()) {
-                        return "Remote Transmission Request";
-                    }
-
-                    String s = "";
-                    byte[] data = canmsg.getData();
-                    for (int i = 0; i < data.length; i++) {
-                        if (i > 0) {
-                            s = s.concat(" ");
-                        }
-                        s = s.concat(String.format("%02x", data[i]));
-                    }
-
-                    return s;
-
-            }
-            return "";
         }
+        return "";
+        
     }
 
     /**

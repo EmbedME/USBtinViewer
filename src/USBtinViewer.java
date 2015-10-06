@@ -41,7 +41,7 @@ import jssc.SerialPortList;
 public class USBtinViewer extends javax.swing.JFrame implements CANMessageListener {
 
     /** Version string */
-    protected final String version = "1.1";
+    protected final String version = "1.2";
 
     /** USBtin device */
     protected USBtin usbtin = new USBtin();
@@ -109,13 +109,13 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
         });
 
         // configure table columns
-        TableColumnModel columnModel = jTable1.getColumnModel();
+        TableColumnModel columnModel = logTable.getColumnModel();
         columnModel.getColumn(0).setPreferredWidth(100);
         columnModel.getColumn(1).setPreferredWidth(40);
         columnModel.getColumn(2).setPreferredWidth(90);
         columnModel.getColumn(3).setPreferredWidth(40);
         columnModel.getColumn(4).setPreferredWidth(370);
-
+        
         // set alignment of id column
         DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
         rightRenderer.setHorizontalAlignment(DefaultTableCellRenderer.RIGHT);
@@ -126,6 +126,17 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
         centerRenderer.setHorizontalAlignment(DefaultTableCellRenderer.CENTER);
         columnModel.getColumn(3).setCellRenderer(centerRenderer);
 
+        // monitor table
+        columnModel = monitorTable.getColumnModel();
+        columnModel.getColumn(0).setPreferredWidth(50);
+        columnModel.getColumn(1).setPreferredWidth(50);
+        columnModel.getColumn(2).setPreferredWidth(40);
+        columnModel.getColumn(3).setPreferredWidth(90);
+        columnModel.getColumn(4).setPreferredWidth(40);
+        columnModel.getColumn(5).setPreferredWidth(370);        
+        columnModel.getColumn(3).setCellRenderer(rightRenderer);
+        columnModel.getColumn(4).setCellRenderer(centerRenderer);
+        
         // trigger initial sync between message string and message input fields
         msgString2msgFields();
         
@@ -147,8 +158,6 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
         connectionButton = new javax.swing.JButton();
         sendMessage = new javax.swing.JTextField();
         sendButton = new javax.swing.JButton();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
         followButton = new javax.swing.JToggleButton();
         openmodeComboBox = new javax.swing.JComboBox();
         clearButton = new javax.swing.JButton();
@@ -164,6 +173,11 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
         msgData7 = new javax.swing.JTextField();
         msgExt = new javax.swing.JCheckBox();
         msgRTR = new javax.swing.JCheckBox();
+        mainTabbedPane = new javax.swing.JTabbedPane();
+        logScrollPane = new javax.swing.JScrollPane();
+        logTable = new javax.swing.JTable();
+        monitorScrollPane = new javax.swing.JScrollPane();
+        monitorTable = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("USBtinViewer");
@@ -197,9 +211,6 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
                 sendButtonActionPerformed(evt);
             }
         });
-
-        jTable1.setModel(new LogMessageTableModel());
-        jScrollPane2.setViewportView(jTable1);
 
         followButton.setSelected(true);
         followButton.setText("Follow");
@@ -273,6 +284,16 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
             }
         });
 
+        logTable.setModel(new LogMessageTableModel());
+        logScrollPane.setViewportView(logTable);
+
+        mainTabbedPane.addTab("Trace", logScrollPane);
+
+        monitorTable.setModel(new MonitorMessageTableModel());
+        monitorScrollPane.setViewportView(monitorTable);
+
+        mainTabbedPane.addTab("Monitor", monitorScrollPane);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -280,7 +301,7 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2)
+                    .addComponent(mainTabbedPane)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(serialPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -319,7 +340,7 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
                                 .addComponent(msgExt)
                                 .addGap(18, 18, 18)
                                 .addComponent(msgRTR)
-                                .addGap(0, 31, Short.MAX_VALUE))
+                                .addGap(0, 59, Short.MAX_VALUE))
                             .addComponent(sendMessage))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(sendButton)))
@@ -337,7 +358,7 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
                     .addComponent(followButton)
                     .addComponent(clearButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 483, Short.MAX_VALUE)
+                .addComponent(mainTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 405, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(msgId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -416,9 +437,12 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
      * @param evt Action event
      */
     private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed
-        LogMessageTableModel tm = (LogMessageTableModel) jTable1.getModel();
+        LogMessageTableModel tm = (LogMessageTableModel) logTable.getModel();
         tm.clear();
         baseTimestamp = System.currentTimeMillis();
+        
+        MonitorMessageTableModel mtm = (MonitorMessageTableModel) monitorTable.getModel();
+        mtm.clear();
     }//GEN-LAST:event_clearButtonActionPerformed
 
     /**
@@ -503,8 +527,11 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
     private javax.swing.JButton clearButton;
     private javax.swing.JButton connectionButton;
     private javax.swing.JToggleButton followButton;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JScrollPane logScrollPane;
+    private javax.swing.JTable logTable;
+    private javax.swing.JTabbedPane mainTabbedPane;
+    private javax.swing.JScrollPane monitorScrollPane;
+    private javax.swing.JTable monitorTable;
     private javax.swing.JTextField msgData0;
     private javax.swing.JTextField msgData1;
     private javax.swing.JTextField msgData2;
@@ -539,11 +566,18 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
      * @param message Message to insert
      */
     public void log(LogMessage message) {
-        LogMessageTableModel tm = (LogMessageTableModel) jTable1.getModel();
+        LogMessageTableModel tm = (LogMessageTableModel) logTable.getModel();
         tm.addMessage(message);
         if (followButton.isSelected()) {
-            jTable1.scrollRectToVisible(jTable1.getCellRect(tm.getRowCount() - 1, 0, true));
+            logTable.scrollRectToVisible(logTable.getCellRect(tm.getRowCount() - 1, 0, true));
         }
+
+        if ((message.type == LogMessage.MessageType.OUT) ||
+                (message.type == LogMessage.MessageType.IN)) {
+            MonitorMessageTableModel mtm = (MonitorMessageTableModel) monitorTable.getModel();
+            mtm.add(message);
+        }
+
     }
 
     /**
@@ -553,11 +587,11 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
      * @param type Type of message
      */
     public void log(String msg, LogMessage.MessageType type) {
-        LogMessageTableModel tm = (LogMessageTableModel) jTable1.getModel();
+        LogMessageTableModel tm = (LogMessageTableModel) logTable.getModel();
         tm.addMessage(new LogMessage(null, msg, type, System.currentTimeMillis() - baseTimestamp));
         if (followButton.isSelected()) {
-            jTable1.scrollRectToVisible(jTable1.getCellRect(tm.getRowCount() - 1, 0, true));
-        }
+            logTable.scrollRectToVisible(logTable.getCellRect(tm.getRowCount() - 1, 0, true));
+        }        
     }
 
     /**
