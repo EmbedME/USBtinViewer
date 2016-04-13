@@ -32,9 +32,13 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import jssc.SerialPortList;
 
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
+import static java.awt.Toolkit.getDefaultToolkit;
+import static java.lang.System.getProperty;
 
 /**
  * Main window frame for USBtinViewer
@@ -145,6 +149,27 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
                             }
                         }
                     });
+
+                    popup.add(new AbstractAction("Copy") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            StringBuilder builder = new StringBuilder();
+                            String separator = getProperty("line.separator");
+
+                            for (int r : logTable.getSelectedRows()) {
+                                LogMessage message = model.getMessage(r);
+                                if (isIoType(message)) {
+                                    builder.append(message.getCanmsg().toString());
+                                    builder.append(separator);
+                                }
+                            }
+
+                            getDefaultToolkit()
+                                    .getSystemClipboard()
+                                    .setContents(new StringSelection(builder.toString()), null);
+                        }
+                    });
+
                     popup.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
