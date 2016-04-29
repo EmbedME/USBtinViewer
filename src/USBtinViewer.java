@@ -7,7 +7,7 @@
  *   timestamping is currently not used!
  * - Disable "Follow" on high-loaded busses!
  *
- * Copyright (C) 2014  Thomas Fischl 
+ * Copyright (C) 2014-2016  Thomas Fischl 
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ import static java.lang.System.getProperty;
 public class USBtinViewer extends javax.swing.JFrame implements CANMessageListener {
 
     /** Version string */
-    protected final String version = "1.2";
+    protected final String version = "1.3";
 
     /** USBtin device */
     protected USBtin usbtin = new USBtin();
@@ -478,7 +478,7 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
                 serialPort.setEnabled(false);
                 sendButton.setEnabled(true);
                 openmodeComboBox.setEnabled(false);
-                log("Connected to USBtin (FW" + usbtin.getFirmwareVersion() + "/HW" + usbtin.getHardwareVersion() + ")", LogMessage.MessageType.INFO);
+                log("Connected to USBtin (FW" + usbtin.getFirmwareVersion() + "/HW" + usbtin.getHardwareVersion() + ", SN: " + usbtin.getSerialNumber() + ")", LogMessage.MessageType.INFO);
 
                 if (baseTimestamp == 0) {
                     baseTimestamp = System.currentTimeMillis();

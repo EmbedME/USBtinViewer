@@ -34,6 +34,11 @@ java -jar dist/USBtinViewer.jar
 Changelog
 ---------
 
+1.3 (2016-04-29)
+* Updated USBtinLib to version 1.2.0
+* Added: context menu to trace window allowing message copy and resend (thanks to teijo)
+* Added: show serial number at connection establishment
+
 1.2 (2015-10-06)
 * Updated USBtinLib to version 1.1.0
 * Added monitor view

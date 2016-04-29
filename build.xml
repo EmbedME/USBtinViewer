@@ -14,7 +14,7 @@
         <pathelement path="${classpath}"/>
         <pathelement path="${build}"/>
         <pathelement location="lib/jssc-2.8.0.jar"/>
-        <pathelement location="lib/USBtinLib-1.1.0.jar"/>
+        <pathelement location="lib/USBtinLib-1.2.0.jar"/>
     </path>
 
     <target name="clean">
@@ -54,7 +54,7 @@
                 <attribute name="Main-Class" value="USBtinViewer"/>
             </manifest>
             <zipfileset src="lib/jssc-2.8.0.jar"/>
-            <zipfileset src="lib/USBtinLib-1.1.0.jar"/>
+            <zipfileset src="lib/USBtinLib-1.2.0.jar"/>
         </jar>
     </target>
 
