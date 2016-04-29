@@ -24,14 +24,21 @@
  */
 
 import de.fischl.usbtin.*;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.ImageIcon;
-import javax.swing.JTextField;
+
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import jssc.SerialPortList;
+
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import static java.awt.Toolkit.getDefaultToolkit;
+import static java.lang.System.getProperty;
 
 /**
  * Main window frame for USBtinViewer
@@ -105,6 +112,66 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
             @Override
             public void changedUpdate(DocumentEvent de) {
                 msgString2msgFields();
+            }
+        });
+
+        logTable.addMouseListener(new MouseAdapter() {
+            private boolean isIoType(LogMessage message) {
+                LogMessage.MessageType type = message.getType();
+                return (type == LogMessage.MessageType.OUT ||
+                        type == LogMessage.MessageType.IN);
+            }
+
+            // "Popup menus are triggered differently on different systems.
+            // Therefore, isPopupTrigger should be checked in both
+            // mousePressed and mouseReleased"
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    mouseReleased(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    final LogMessageTableModel model = (LogMessageTableModel) logTable.getModel();
+                    JPopupMenu popup = new JPopupMenu();
+
+                    popup.add(new AbstractAction("Resend") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            for (int r : logTable.getSelectedRows()) {
+                                LogMessage message = model.getMessage(r);
+                                if (isIoType(message)) {
+                                    send(message.getCanmsg());
+                                }
+                            }
+                        }
+                    });
+
+                    popup.add(new AbstractAction("Copy") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            StringBuilder builder = new StringBuilder();
+                            String separator = getProperty("line.separator");
+
+                            for (int r : logTable.getSelectedRows()) {
+                                LogMessage message = model.getMessage(r);
+                                if (isIoType(message)) {
+                                    builder.append(message.getCanmsg().toString());
+                                    builder.append(separator);
+                                }
+                            }
+
+                            getDefaultToolkit()
+                                    .getSystemClipboard()
+                                    .setContents(new StringSelection(builder.toString()), null);
+                        }
+                    });
+
+                    popup.show(e.getComponent(), e.getX(), e.getY());
+                }
             }
         });
 
@@ -598,7 +665,13 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
      * Send out CAN message string
      */
     public void send() {
-        CANMessage canmsg = new CANMessage(sendMessage.getText());
+        send(new CANMessage(sendMessage.getText()));
+    }
+
+    /**
+     * Send out a CAN message
+     */
+    public void send(CANMessage canmsg) {
         log(new LogMessage(canmsg, null, LogMessage.MessageType.OUT, System.currentTimeMillis() - baseTimestamp));
         try {
             usbtin.send(canmsg);

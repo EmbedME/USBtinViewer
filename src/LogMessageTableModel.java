@@ -79,6 +79,10 @@ public class LogMessageTableModel implements TableModel {
         }
     }
 
+    public LogMessage getMessage(int index) {
+        return messages.get(index);
+    }
+
     /**
      * Clear the message list
      */
