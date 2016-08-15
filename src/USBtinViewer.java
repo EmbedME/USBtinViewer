@@ -40,6 +40,9 @@ import java.awt.event.MouseEvent;
 import static java.awt.Toolkit.getDefaultToolkit;
 import static java.lang.System.getProperty;
 
+import java.util.Properties;
+import java.io.FileInputStream;
+
 /**
  * Main window frame for USBtinViewer
  * 
@@ -47,6 +50,7 @@ import static java.lang.System.getProperty;
  */
 public class USBtinViewer extends javax.swing.JFrame implements CANMessageListener {
 
+    public static final String USBTIN_PROPERTIES = "usbtin.properties";
     /** Version string */
     protected final String version = "1.3";
 
@@ -62,13 +66,23 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
     /** Start timestamp in system-milliseconds */
     protected long baseTimestamp = 0;
 
+    private Properties props = null;
+
     /**
      * Creates new form and initialize it
      */
     public USBtinViewer() {
-        
+        // Load configs
+        props = new Properties();
+
+        try {
+			props.load(new FileInputStream(USBTIN_PROPERTIES));
+			System.out.println("usbtin.properties loaded");
+        } catch(Exception e) {}
+
         // init view components
         initComponents();
+        bitRate.setSelectedItem(props.getProperty("bitrate", "10000"));
         setTitle(getTitle() + " " + version);
         setIconImage(new ImageIcon(getClass().getResource("/res/icons/usbtinviewer.png")).getImage());
         openmodeComboBox.setSelectedItem(USBtin.OpenMode.ACTIVE);
