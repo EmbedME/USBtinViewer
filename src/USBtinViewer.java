@@ -55,7 +55,7 @@ import java.io.File;
  */
 public class USBtinViewer extends javax.swing.JFrame implements CANMessageListener {
 
-    public static final String USBTIN_PROPERTIES = "usbtin.properties";
+    public static final String USBTIN_PROPERTIES = "/usbtin.properties";
     /** Version string */
     protected final String version = "1.3";
 
@@ -73,17 +73,23 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
 
     private Properties props = null;
 
+    /** Config file location, same as where the .jar is **/
+    private String configFilePath = null;
+
     /**
      * Creates new form and initialize it
      */
     public USBtinViewer() {
-        // Load configs
-        props = new Properties();
-
         try {
-            props.load(new FileInputStream(USBTIN_PROPERTIES));
+            File jarFile = new File(USBtinViewer.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+            configFilePath = jarFile.getParentFile().getPath();
+
+            // Load configs
+            props = new Properties();
+
+            props.load(new FileInputStream(configFilePath + USBTIN_PROPERTIES));
             System.out.println("usbtin.properties loaded");
-        } catch(Exception e) {}
+        } catch(Exception e) { e.printStackTrace(); }
 
         // init view components
         initComponents();
@@ -243,7 +249,8 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
         props.setProperty("bitrate",(String) bitRate.getSelectedItem());
 
         try {
-            File f = new File("usbtin.properties");
+            File f = new File(configFilePath + USBTIN_PROPERTIES);
+            System.out.println("Saving configs to: " + configFilePath + USBTIN_PROPERTIES);
             OutputStream out = new FileOutputStream(f);
             props.store(out, "Automatically generated config file");
         } catch(Exception e) {
