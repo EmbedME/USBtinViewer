@@ -36,9 +36,17 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import static java.awt.Toolkit.getDefaultToolkit;
 import static java.lang.System.getProperty;
+
+import java.util.Properties;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.io.File;
 
 /**
  * Main window frame for USBtinViewer
@@ -47,6 +55,7 @@ import static java.lang.System.getProperty;
  */
 public class USBtinViewer extends javax.swing.JFrame implements CANMessageListener {
 
+    public static final String USBTIN_PROPERTIES = "/usbtin.properties";
     /** Version string */
     protected final String version = "1.3";
 
@@ -62,16 +71,41 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
     /** Start timestamp in system-milliseconds */
     protected long baseTimestamp = 0;
 
+    private Properties props = null;
+
+    /** Config file location, same as where the .jar is **/
+    private String configFilePath = null;
+
     /**
      * Creates new form and initialize it
      */
     public USBtinViewer() {
-        
+        try {
+            File jarFile = new File(USBtinViewer.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+            configFilePath = jarFile.getParentFile().getPath();
+
+            // Load configs
+            props = new Properties();
+
+            props.load(new FileInputStream(configFilePath + USBTIN_PROPERTIES));
+            System.out.println("usbtin.properties loaded");
+        } catch(Exception e) { e.printStackTrace(); }
+
         // init view components
         initComponents();
+        bitRate.setSelectedItem(props.getProperty("bitrate", "10000"));
         setTitle(getTitle() + " " + version);
         setIconImage(new ImageIcon(getClass().getResource("/res/icons/usbtinviewer.png")).getImage());
         openmodeComboBox.setSelectedItem(USBtin.OpenMode.ACTIVE);
+
+        // Closing hooks to save config
+        //
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                SaveConfigsToDisk();
+                System.exit(0);
+            }
+        });
         
         // initialize message payload input fields and add listeners
         msgDataFields = new JTextField[]{msgData0, msgData1, msgData2, msgData3, msgData4, msgData5, msgData6, msgData7};
@@ -209,6 +243,19 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
         
         // init message listener
         usbtin.addMessageListener(this);
+    }
+
+    private void SaveConfigsToDisk() {
+        props.setProperty("bitrate",(String) bitRate.getSelectedItem());
+
+        try {
+            File f = new File(configFilePath + USBTIN_PROPERTIES);
+            System.out.println("Saving configs to: " + configFilePath + USBTIN_PROPERTIES);
+            OutputStream out = new FileOutputStream(f);
+            props.store(out, "Automatically generated config file");
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
