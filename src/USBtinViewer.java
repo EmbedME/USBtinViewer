@@ -81,8 +81,8 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
         props = new Properties();
 
         try {
-			props.load(new FileInputStream(USBTIN_PROPERTIES));
-			System.out.println("usbtin.properties loaded");
+            props.load(new FileInputStream(USBTIN_PROPERTIES));
+            System.out.println("usbtin.properties loaded");
         } catch(Exception e) {}
 
         // init view components
@@ -92,14 +92,14 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
         setIconImage(new ImageIcon(getClass().getResource("/res/icons/usbtinviewer.png")).getImage());
         openmodeComboBox.setSelectedItem(USBtin.OpenMode.ACTIVE);
 
-		// Closing hooks to save config
-		//
-		this.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				SaveConfigsToDisk();
-				System.exit(0);
-			}
-		});
+        // Closing hooks to save config
+        //
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                SaveConfigsToDisk();
+                System.exit(0);
+            }
+        });
         
         // initialize message payload input fields and add listeners
         msgDataFields = new JTextField[]{msgData0, msgData1, msgData2, msgData3, msgData4, msgData5, msgData6, msgData7};
@@ -239,17 +239,17 @@ public class USBtinViewer extends javax.swing.JFrame implements CANMessageListen
         usbtin.addMessageListener(this);
     }
 
-	private void SaveConfigsToDisk() {
-		props.setProperty("bitrate",(String) bitRate.getSelectedItem());
+    private void SaveConfigsToDisk() {
+        props.setProperty("bitrate",(String) bitRate.getSelectedItem());
 
-		try {
-			File f = new File("usbtin.properties");
-			OutputStream out = new FileOutputStream(f);
-			props.store(out, "Automatically generated config file");
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
+        try {
+            File f = new File("usbtin.properties");
+            OutputStream out = new FileOutputStream(f);
+            props.store(out, "Automatically generated config file");
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
