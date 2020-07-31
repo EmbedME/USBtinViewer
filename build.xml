@@ -6,14 +6,14 @@
     <property name="dist.dir"  location="dist"/>
     <property name="doc.dir"  location="doc"/>
 
-    <property name="ant.build.javac.source" value="1.7"/>
-    <property name="ant.build.javac.target" value="1.7"/>
+    <property name="ant.build.javac.source" value="1.6"/>
+    <property name="ant.build.javac.target" value="1.6"/>
 
 
     <path id="project.class.path">
         <pathelement path="${classpath}"/>
         <pathelement path="${build}"/>
-        <pathelement location="lib/jssc-2.9.0.jar"/>
+        <pathelement location="lib/jssc-2.9.1.jar"/>
         <pathelement location="lib/USBtinLib-1.2.0.jar"/>
     </path>
 
@@ -53,7 +53,7 @@
             <manifest>
                 <attribute name="Main-Class" value="USBtinViewer"/>
             </manifest>
-            <zipfileset src="lib/jssc-2.9.0.jar"/>
+            <zipfileset src="lib/jssc-2.9.1.jar"/>
             <zipfileset src="lib/USBtinLib-1.2.0.jar"/>
         </jar>
     </target>
