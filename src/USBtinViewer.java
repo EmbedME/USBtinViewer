@@ -48,7 +48,7 @@ import static java.lang.System.getProperty;
 public class USBtinViewer extends javax.swing.JFrame implements CANMessageListener {
 
     /** Version string */
-    protected final String version = "1.3";
+    protected final String version = "1.3.1";
 
     /** USBtin device */
     protected USBtin usbtin = new USBtin();
